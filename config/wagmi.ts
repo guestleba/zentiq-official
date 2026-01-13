@@ -1,9 +1,10 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { mainnet, polygon, optimism, arbitrum, base } from 'wagmi/chains';
+import { sepolia, mainnet } from 'wagmi/chains'; // 1. Importamos a Sepolia
 
 export const config = getDefaultConfig({
   appName: 'Zentiq Platform',
-  projectId: 'YOUR_PROJECT_ID', // O RainbowKit pede isso, pode deixar assim para teste local
-  chains: [mainnet, polygon, optimism, arbitrum, base],
-  ssr: true, // Importante para Next.js
+  projectId: 'YOUR_PROJECT_ID',
+  // 2. Colocamos sepolia PRIMEIRO na lista. Isso a torna a rede padrão.
+  chains: [sepolia, mainnet],
+  ssr: true,
 });
