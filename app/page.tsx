@@ -26,7 +26,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 w-full flex justify-between items-center">
           <div className="flex items-center gap-3 cursor-pointer group">
              {/* Using the SVG Logo you requested previously, or fallback to text if needed */}
-            <ZentiqLogo size={32} className="group-hover:rotate-180 transition-transform duration-700" />
+             <ZentiqLogo className="w-8 h-8 group-hover:rotate-180 transition-transform duration-700" />
             <span className="font-bold text-xl text-zentiq-white tracking-wider font-sans">
               ZENTIQ
             </span>

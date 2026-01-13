@@ -2,14 +2,15 @@ import React from 'react';
 
 interface ZentiqLogoProps {
   className?: string;
-  size?: number;
+  size?: number; // Mantemos aqui para não quebrar, mas não vamos obrigar o uso
 }
 
-const ZentiqLogo: React.FC<ZentiqLogoProps> = ({ className = "", size = 40 }) => {
+const ZentiqLogo: React.FC<ZentiqLogoProps> = ({ className = "" }) => {
   return (
     <svg 
-      width={size} 
-      height={size} 
+      // MUDANÇA AQUI: Colocamos 100% para ele obedecer ao tamanho da caixa do pai
+      width="100%" 
+      height="100%" 
       viewBox="0 0 200 200" 
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
