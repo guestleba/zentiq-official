@@ -2,23 +2,20 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx}", // Adicionei por segurança
   ],
   theme: {
     extend: {
       colors: {
-        zentiq: {
-          navy: '#0a192f',
-          teal: '#64ffda',
-          slate: '#8892b0',
-          white: '#e6f1ff',
-          lightNavy: '#112240',
-        }
-      },
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        // Vamos garantir que as cores do Zentiq estejam aqui
+        'zentiq-dark': '#0a192f',
+        'zentiq-teal': '#64ffda',
+        'zentiq-silver': '#8892b0',
       },
     },
   },
