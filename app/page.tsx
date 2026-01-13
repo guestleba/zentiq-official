@@ -3,8 +3,8 @@
 import React from 'react';
 import { Shield, Globe, Lock, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ConnectButton } from '@rainbow-me/rainbowkit'; // Importando o botão Web3
 import ZentiqLogo from '../components/ZentiqLogo';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Home() {
   return (
@@ -14,19 +14,23 @@ export default function Home() {
       <nav className="fixed w-full top-0 z-50 bg-zentiq-dark/90 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group">
-            {/* LOGO CORRIGIDO AQUI: Usa classes do Tailwind para tamanho (w-10 h-10) */}
+            {/* Logo do Zentiq */}
             <div className="w-10 h-10">
                 <ZentiqLogo className="w-full h-full group-hover:rotate-180 transition-transform duration-700" />
             </div>
             <span className="font-bold text-xl text-zentiq-white tracking-wider">ZENTIQ</span>
           </div>
+          
+          {/* BOTÃO WEB3 REAL (RAINBOWKIT) */}
           <div className="hidden md:block">
-  <ConnectButton 
-    label="Connect Wallet" 
-    accountStatus="address" 
-    chainStatus="icon"
-  />
-</div>
+            <ConnectButton 
+                label="Connect Wallet"
+                accountStatus="address"
+                chainStatus="icon"
+                showBalance={false}
+            />
+          </div>
+        </div>
       </nav>
 
       {/* Hero Section */}
