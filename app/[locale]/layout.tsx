@@ -1,9 +1,9 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Inter } from "next/font/google";
-import "../globals.css"; // CORRIGIDO: Volta apenas uma pasta (para 'app')
+import "@/app/globals.css"; // <--- O GPS (@) acha o arquivo direto!
 import '@rainbow-me/rainbowkit/styles.css';
-import { Providers } from "../providers"; // CORRIGIDO: Volta apenas uma pasta
+import { Providers } from "@/app/providers"; // <--- O GPS acha os providers!
 
 const inter = Inter({ subsets: ["latin"] });
 
