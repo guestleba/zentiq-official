@@ -5,17 +5,17 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/**/*.{js,ts,jsx,tsx,mdx}", // Adicionei por segurança
   ],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        // Vamos garantir que as cores do Zentiq estejam aqui
         'zentiq-dark': '#0a192f',
         'zentiq-teal': '#64ffda',
-        'zentiq-silver': '#8892b0',
+        'zentiq-slate': '#8892b0',
+        'zentiq-white': '#e6f1ff',
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
       },
     },
   },

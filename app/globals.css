@@ -5,29 +5,16 @@
 :root {
   --background: #0a192f;
   --foreground: #8892b0;
-  --teal: #64ffda;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #0a192f;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Selection Color for Cyber Feel */
-::selection {
-  background: rgba(100, 255, 218, 0.2);
-  color: #64ffda;
-}
-
-/* Button Hover Effects */
-.btn-teal-hover {
-  transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-}
-.btn-teal-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px 0 rgba(100, 255, 218, 0.2);
+/* Efeito de brilho para botões */
+.glow-effect {
+  box-shadow: 0 0 10px rgba(100, 255, 218, 0.1);
 }
