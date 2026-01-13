@@ -4,6 +4,7 @@ import React from 'react';
 import { Shield, Globe, Lock, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ZentiqLogo from '../components/ZentiqLogo';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Home() {
   return (
@@ -19,10 +20,13 @@ export default function Home() {
             </div>
             <span className="font-bold text-xl text-zentiq-white tracking-wider">ZENTIQ</span>
           </div>
-          <button className="hidden md:block px-6 py-2 border border-zentiq-teal text-zentiq-teal rounded hover:bg-zentiq-teal/10 transition-colors font-medium text-sm">
-            Connect Wallet
-          </button>
-        </div>
+          <div className="hidden md:block">
+  <ConnectButton 
+    label="Connect Wallet" 
+    accountStatus="address" 
+    chainStatus="icon"
+  />
+</div>
       </nav>
 
       {/* Hero Section */}
