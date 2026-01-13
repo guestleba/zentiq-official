@@ -1,0 +1,20 @@
+{
+    "Navbar": {
+      "connectWallet": "Conectar Carteira"
+    },
+    "Hero": {
+      "label": "PROTOCOLO DE PRIVACIDADE",
+      "title": "Silêncio é <br/> Inteligência.",
+      "subtitle": "O primeiro protocolo de privacidade projetado para operações globais. Proteja seus dados de transação sem sacrificar a conformidade.",
+      "launchApp": "Iniciar App",
+      "docs": "Ler Documentação"
+    },
+    "Features": {
+      "shieldTitle": "Pools Blindados",
+      "shieldDesc": "Criptografia de nível empresarial para dados de transação.",
+      "globalTitle": "Conformidade Global",
+      "globalDesc": "Chaves de visualização integradas para auditoria regulatória.",
+      "lockTitle": "Liquidação Instantânea",
+      "lockDesc": "Privacidade que não desacelera os negócios."
+    }
+  }

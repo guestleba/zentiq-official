@@ -1,0 +1,20 @@
+{
+    "Navbar": {
+      "connectWallet": "Connect Wallet"
+    },
+    "Hero": {
+      "label": "PRIVACY PROTOCOL",
+      "title": "Silence is <br/> Intelligence.",
+      "subtitle": "The first privacy protocol designed for global business operations. Shield your transaction data without sacrificing compliance.",
+      "launchApp": "Launch App",
+      "docs": "Read Documentation"
+    },
+    "Features": {
+      "shieldTitle": "Shielded Pools",
+      "shieldDesc": "Enterprise-grade encryption for transaction data.",
+      "globalTitle": "Global Compliance",
+      "globalDesc": "Built-in view keys for regulatory auditing.",
+      "lockTitle": "Instant Settlement",
+      "lockDesc": "Privacy that doesn't slow down business."
+    }
+  }
