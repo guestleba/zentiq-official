@@ -3,55 +3,76 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount, useBalance, useSendTransaction } from 'wagmi';
 import { parseEther } from 'viem';
-import { Wallet, ArrowDownLeft, ShieldCheck, AlertCircle, Lock, ArrowRight, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner'; // <--- Importando o disparador de alertas
+import { Wallet, ArrowDownLeft, ShieldCheck, AlertCircle, Lock, ArrowRight, ExternalLink, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Definindo o tipo de uma transação para o TypeScript não reclamar
+type Transaction = {
+  hash: string;
+  amount: string;
+  timestamp: string;
+};
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
+  // ESTADOS LOCAIS (Memória da tela)
   const [amount, setAmount] = useState('');
+  const [shieldedVolume, setShieldedVolume] = useState(0); // Começa com 0
+  const [transactions, setTransactions] = useState<Transaction[]>([]); // Lista vazia
   
-  // Pegamos o status, a função de envio e o hash (recibo) da transação
   const { sendTransaction, isPending, isSuccess, data: hash, error } = useSendTransaction();
 
-  // EFEITO: Vigia o sucesso da transação
+  // EFEITO 1: Sucesso da Transação -> Atualiza a Tela
   useEffect(() => {
     if (isSuccess && hash) {
-      setAmount(''); // Limpa o campo
-      toast.success('Transaction Sent!', {
-        description: `Hash: ${hash.slice(0, 6)}...${hash.slice(-4)}`,
+      // 1. Atualiza o Volume Total
+      const valorNumerico = parseFloat(amount);
+      setShieldedVolume((prev) => prev + valorNumerico);
+
+      // 2. Adiciona na lista de histórico visual
+      const novaTransacao: Transaction = {
+        hash: hash,
+        amount: amount,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setTransactions((prev) => [novaTransacao, ...prev]); // Adiciona no topo da lista
+
+      // 3. Notificação e Limpeza
+      toast.success('Assets Shielded Successfully!', {
+        description: `+${amount} ETH added to the pool.`,
         action: {
           label: 'View Scan',
           onClick: () => window.open(`https://etherscan.io/tx/${hash}`, '_blank'),
         },
       });
+      
+      setAmount(''); // Limpa o campo
     }
-  }, [isSuccess, hash]);
+  }, [isSuccess, hash]); // Só roda quando isSuccess mudar para true
 
-  // EFEITO: Vigia erros (ex: usuário rejeitou na carteira)
+  // EFEITO 2: Erro
   useEffect(() => {
     if (error) {
       toast.error('Transaction Failed', {
         description: error.message.includes('User rejected') 
-          ? 'You rejected the transaction.' 
-          : 'Something went wrong.'
+          ? 'You cancelled the operation.' 
+          : 'Network error occurred.'
       });
     }
   }, [error]);
 
   const handleShield = () => {
     if (!amount || !address) {
-        toast.warning('Invalid Input', { description: 'Please enter an amount.' });
+        toast.warning('Invalid Input');
         return;
     }
-    
     try {
       sendTransaction({ 
         to: address, 
         value: parseEther(amount) 
       });
-      // O toast de "Pending" a gente deixa o botão cuidar
     } catch (error) {
       console.error(error);
     }
@@ -78,9 +99,10 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Lado Esquerdo (Info) */}
+        {/* Lado Esquerdo */}
         <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Saldo da Carteira */}
                 <div className="bg-[#112240] p-6 rounded-xl border border-white/5 glow-effect">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-[#64ffda]/10 rounded-lg">
@@ -95,46 +117,68 @@ export default function Dashboard() {
                     </p>
                 </div>
 
-                <div className="bg-[#112240] p-6 rounded-xl border border-white/5">
+                {/* Saldo Blindado (AGORA DINÂMICO) */}
+                <div className="bg-[#112240] p-6 rounded-xl border border-white/5 transition-all duration-500">
                     <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-green-500/10 rounded-lg">
-                        <ShieldCheck className="text-green-400 w-6 h-6" />
+                        <div className="p-3 bg-blue-500/10 rounded-lg">
+                        <ShieldCheck className="text-blue-400 w-6 h-6" />
                         </div>
+                        {shieldedVolume > 0 && (
+                            <span className="text-blue-400 text-xs font-bold px-2 py-1 bg-blue-400/10 rounded animate-pulse">UPDATING</span>
+                        )}
                     </div>
-                    <h3 className="text-[#8892b0] text-sm mb-1">Privacy Set</h3>
-                    <p className="text-3xl font-bold text-[#e6f1ff]">Strong</p>
+                    <h3 className="text-[#8892b0] text-sm mb-1">Total Shielded Volume</h3>
+                    <p className="text-3xl font-bold text-[#e6f1ff]">
+                        {shieldedVolume.toFixed(4)} ETH
+                    </p>
                 </div>
             </div>
 
+            {/* Lista de Transações (AGORA DINÂMICA) */}
             <div className="bg-[#112240] rounded-xl border border-white/5 overflow-hidden min-h-[300px]">
-                <div className="p-6 border-b border-white/5">
-                    <h3 className="text-xl font-bold text-[#e6f1ff]">Recent Transactions</h3>
+                <div className="p-6 border-b border-white/5 flex justify-between items-center">
+                    <h3 className="text-xl font-bold text-[#e6f1ff]">Recent Activity</h3>
+                    <span className="text-xs text-[#8892b0] bg-white/5 px-2 py-1 rounded">
+                        {transactions.length} Transactions
+                    </span>
                 </div>
-                <div className="p-12 text-center text-[#8892b0] flex flex-col items-center justify-center h-full">
-                    {/* Se tivermos um hash de sucesso recente, mostramos ele aqui também */}
-                    {hash ? (
-                        <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-4">
-                            <ShieldCheck className="w-12 h-12 mb-4 text-[#64ffda]" />
-                            <p className="text-[#e6f1ff] font-bold mb-2">Shielding Initiated</p>
-                            <a 
-                                href={`https://etherscan.io/tx/${hash}`} 
-                                target="_blank" 
-                                className="text-[#64ffda] text-sm flex items-center gap-1 hover:underline"
-                            >
-                                View on Explorer <ExternalLink size={12}/>
-                            </a>
+                
+                <div className="p-0">
+                    {transactions.length > 0 ? (
+                        <div className="divide-y divide-white/5">
+                            {transactions.map((tx) => (
+                                <div key={tx.hash} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors animate-in fade-in slide-in-from-top-2">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-[#64ffda]/10 rounded-full text-[#64ffda]">
+                                            <ArrowDownLeft size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[#e6f1ff] font-medium">Shield Deposit</p>
+                                            <p className="text-xs text-[#8892b0] flex items-center gap-1">
+                                                <Clock size={10} /> {tx.timestamp}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[#64ffda] font-bold">+{tx.amount} ETH</p>
+                                        <a href={`https://etherscan.io/tx/${tx.hash}`} target="_blank" className="text-xs text-[#8892b0] hover:text-[#e6f1ff] flex items-center justify-end gap-1">
+                                            {tx.hash.slice(0,6)}... <ExternalLink size={10} />
+                                        </a>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
-                        <>
+                        <div className="p-12 text-center text-[#8892b0] flex flex-col items-center justify-center h-full">
                             <ShieldCheck className="w-12 h-12 mb-4 opacity-20" />
-                            <p>No shielded activity detected in this epoch.</p>
-                        </>
+                            <p>No transactions in this session.</p>
+                        </div>
                     )}
                 </div>
             </div>
         </div>
 
-        {/* Lado Direito (Ação) */}
+        {/* Lado Direito (Formulário) */}
         <div className="lg:col-span-1">
             <div className="bg-[#112240] p-6 rounded-xl border border-[#64ffda]/20 sticky top-24">
                 <div className="flex items-center gap-3 mb-6">
@@ -144,13 +188,9 @@ export default function Dashboard() {
                     <h2 className="text-xl font-bold text-[#e6f1ff]">Shield Assets</h2>
                 </div>
 
-                <p className="text-sm text-[#8892b0] mb-6">
-                    Transfer assets from your public wallet to the shielded pool.
-                </p>
-
                 <div className="space-y-4">
                     <div>
-                        <label className="text-xs text-[#8892b0] uppercase font-bold ml-1">Amount to Shield</label>
+                        <label className="text-xs text-[#8892b0] uppercase font-bold ml-1">Amount</label>
                         <div className="relative mt-2">
                             <input 
                                 type="number" 
