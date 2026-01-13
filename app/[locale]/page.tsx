@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Shield, Globe, Lock, ArrowRight } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import Link from 'next/link'; // <--- 1. Importei o Link aqui
 import ZentiqLogo from '@/components/ZentiqLogo';
 
 export default function Home() {
@@ -40,9 +41,14 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <button className="px-8 py-4 bg-[#64ffda] text-[#0a192f] font-bold rounded text-lg hover:bg-opacity-90 transition-all flex items-center gap-2">
-                {tHero('launchApp')} <ArrowRight size={20} />
-              </button>
+              
+              {/* 2. O LINK FOI ADICIONADO AQUI NO BOTÃO "LAUNCH APP" */}
+              <Link href="/dashboard">
+                <button className="px-8 py-4 bg-[#64ffda] text-[#0a192f] font-bold rounded text-lg hover:bg-opacity-90 transition-all flex items-center gap-2">
+                    {tHero('launchApp')} <ArrowRight size={20} />
+                </button>
+              </Link>
+
               <button className="px-8 py-4 text-[#e6f1ff] border border-[#8892b0]/30 rounded text-lg hover:border-[#64ffda] transition-all">
                 {tHero('docs')}
               </button>
