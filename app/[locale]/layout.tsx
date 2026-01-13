@@ -1,9 +1,9 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { Inter } from "next/font/google";
-import "../../globals.css"; // Volta duas pastas para achar o CSS
+import "../globals.css"; // CORRIGIDO: Volta apenas uma pasta (para 'app')
 import '@rainbow-me/rainbowkit/styles.css';
-import { Providers } from "../../providers"; // Volta duas pastas
+import { Providers } from "../providers"; // CORRIGIDO: Volta apenas uma pasta
 
 const inter = Inter({ subsets: ["latin"] });
 

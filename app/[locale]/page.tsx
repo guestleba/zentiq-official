@@ -1,8 +1,8 @@
 import React from 'react';
-import { useTranslations } from 'next-intl'; // Importa o tradutor
+import { useTranslations } from 'next-intl';
 import { Shield, Globe, Lock, ArrowRight } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import ZentiqLogo from '../../../components/ZentiqLogo'; // Note os 3 pontos para voltar pastas
+import ZentiqLogo from '../../components/ZentiqLogo'; // CORRIGIDO: Volta 2 pastas (app -> root -> components)
 
 export default function Home() {
   const tNavbar = useTranslations('Navbar');
@@ -32,7 +32,6 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center mt-20">
           <div>
             <h2 className="text-[#64ffda] font-medium tracking-widest mb-4">{tHero('label')}</h2>
-            {/* O comando rich permite usar HTML como <br> dentro do texto traduzido */}
             <h1 className="text-5xl md:text-7xl font-bold text-[#e6f1ff] mb-6 leading-tight">
               {tHero.rich('title', { br: () => <br /> })}
             </h1>
@@ -51,7 +50,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Features */}
+        {/* Features Grid */}
         <div className="max-w-6xl mx-auto mt-32 grid md:grid-cols-3 gap-8">
           {[
             { icon: <Shield className="w-8 h-8 text-[#64ffda]" />, title: tFeatures('shieldTitle'), desc: tFeatures('shieldDesc') },
