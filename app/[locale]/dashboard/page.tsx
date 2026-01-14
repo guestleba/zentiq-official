@@ -170,7 +170,7 @@ export default function Dashboard() {
         <div className="lg:col-span-1">
             <div className="bg-[#112240] p-6 rounded-xl border border-[#64ffda]/20 sticky top-24">
                 
-                {/* AQUI ESTÃO OS BOTÕES NOVOS */}
+                {/* BOTÕES DE SELEÇÃO */}
                 <div className="flex bg-[#0a192f] p-1 rounded-lg mb-6 border border-white/5">
                     <button 
                         onClick={() => setMode('deposit')}
