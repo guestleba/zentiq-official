@@ -4,9 +4,18 @@ import { Inter } from "next/font/google";
 import "@/app/globals.css";
 import '@rainbow-me/rainbowkit/styles.css';
 import { Providers } from "@/app/providers";
-import { Toaster } from 'sonner'; // <--- 1. Importar aqui
+import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ["latin"] });
+
+// --- NOVO: IDENTIDADE VISUAL ---
+export const metadata = {
+  title: 'ZENTIQ | Global Privacy Layer',
+  description: 'The first privacy protocol designed for global business operations. Shield your transactions with enterprise-grade encryption.',
+  icons: {
+    icon: '/icon.png', // Vamos criar isso no próximo passo
+  },
+};
 
 export default async function LocaleLayout({
   children,
@@ -23,7 +32,6 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <Providers>
             {children}
-            {/* 2. Adicionar o Toaster aqui para mostrar as mensagens */}
             <Toaster position="bottom-right" theme="dark" richColors />
           </Providers>
         </NextIntlClientProvider>
