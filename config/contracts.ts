@@ -1,7 +1,6 @@
-// O endereço que você acabou de criar no Remix
-export const VAULT_ADDRESS = '0x453D8b59ee2f47CE16cB8Df0966D29E21611FF99';
+// ENDEREÇO NOVO (V2)
+export const VAULT_ADDRESS = '0xD7256F312efea09950793eC07bBf66a9B4f5dD76';
 
-// A "Interface" (ABI) que ensina o site a conversar com o contrato
 export const VAULT_ABI = [
   {
     "inputs": [],
@@ -11,15 +10,29 @@ export const VAULT_ABI = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getVaultBalance",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "amount",
         "type": "uint256"
       }
     ],
+    "name": "withdraw", // <--- Função nova de saque
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getVaultBalance",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
+    "name": "getMyBalance",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   }
