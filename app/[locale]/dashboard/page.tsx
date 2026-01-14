@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useAccount, useBalance, useSendTransaction } from 'wagmi';
+import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther } from 'viem';
-import { Wallet, ArrowDownLeft, ShieldCheck, AlertCircle, Lock, ArrowRight, ExternalLink, Clock } from 'lucide-react';
+import { Wallet, ArrowDownLeft, ShieldCheck, Lock, ArrowRight, ExternalLink, Clock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { VAULT_ADDRESS, VAULT_ABI } from '@/config/contracts'; // <--- Importando o arquivo que você criou
 
-// Definindo o tipo de uma transação para o TypeScript não reclamar
 type Transaction = {
   hash: string;
   amount: string;
@@ -17,61 +17,70 @@ export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { data: balanceData } = useBalance({ address });
   
-  // ESTADOS LOCAIS (Memória da tela)
+  // Estados da tela
   const [amount, setAmount] = useState('');
-  const [shieldedVolume, setShieldedVolume] = useState(0); // Começa com 0
-  const [transactions, setTransactions] = useState<Transaction[]>([]); // Lista vazia
+  const [shieldedVolume, setShieldedVolume] = useState(0); 
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   
-  const { sendTransaction, isPending, isSuccess, data: hash, error } = useSendTransaction();
+  // 1. Hook para ESCREVER no contrato (Chamar a função deposit)
+  const { writeContract, data: hash, error: writeError, isPending: isWalletLoading } = useWriteContract();
 
-  // EFEITO 1: Sucesso da Transação -> Atualiza a Tela
+  // 2. Hook para ESPERAR a confirmação da Blockchain (O "Loading" real)
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  // EFEITO: Monitora quando a transação é CONFIRMADA na blockchain
   useEffect(() => {
-    if (isSuccess && hash) {
-      // 1. Atualiza o Volume Total
+    if (isConfirmed && hash) {
+      // Atualiza valores visuais
       const valorNumerico = parseFloat(amount);
       setShieldedVolume((prev) => prev + valorNumerico);
 
-      // 2. Adiciona na lista de histórico visual
       const novaTransacao: Transaction = {
         hash: hash,
         amount: amount,
         timestamp: new Date().toLocaleTimeString(),
       };
-      setTransactions((prev) => [novaTransacao, ...prev]); // Adiciona no topo da lista
+      setTransactions((prev) => [novaTransacao, ...prev]);
 
-      // 3. Notificação e Limpeza
-      toast.success('Assets Shielded Successfully!', {
-        description: `+${amount} ETH added to the pool.`,
+      // Sucesso!
+      toast.success('Secure Deposit Complete!', {
+        description: `Funds successfully locked in Zentiq Vault.`,
         action: {
-          label: 'View Scan',
-          onClick: () => window.open(`https://etherscan.io/tx/${hash}`, '_blank'),
+          label: 'View on Etherscan',
+          onClick: () => window.open(`https://sepolia.etherscan.io/tx/${hash}`, '_blank'),
         },
       });
       
       setAmount(''); // Limpa o campo
     }
-  }, [isSuccess, hash]); // Só roda quando isSuccess mudar para true
+  }, [isConfirmed, hash]);
 
-  // EFEITO 2: Erro
+  // EFEITO: Monitora erros
   useEffect(() => {
-    if (error) {
+    if (writeError) {
       toast.error('Transaction Failed', {
-        description: error.message.includes('User rejected') 
-          ? 'You cancelled the operation.' 
-          : 'Network error occurred.'
+        description: writeError.message.includes('User rejected') 
+          ? 'Transaction rejected by user.' 
+          : 'Contract interaction failed.'
       });
     }
-  }, [error]);
+  }, [writeError]);
 
   const handleShield = () => {
     if (!amount || !address) {
         toast.warning('Invalid Input');
         return;
     }
+    
     try {
-      sendTransaction({ 
-        to: address, 
-        value: parseEther(amount) 
+      // AQUI ESTÁ A MÁGICA: Chamamos a função 'deposit' do contrato
+      writeContract({
+        address: VAULT_ADDRESS,
+        abi: VAULT_ABI,
+        functionName: 'deposit',
+        value: parseEther(amount), // Envia o valor em ETH junto com a chamada
       });
     } catch (error) {
       console.error(error);
@@ -92,7 +101,7 @@ export default function Dashboard() {
         {isConnected && (
             <div className="px-4 py-2 bg-[#64ffda]/10 border border-[#64ffda]/20 rounded-lg flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#64ffda] rounded-full animate-pulse"></div>
-                <span className="text-[#64ffda] text-sm font-mono">ENCRYPTED CONNECTION</span>
+                <span className="text-[#64ffda] text-sm font-mono">SEPOLIA NETWORK CONNECTED</span>
             </div>
         )}
       </header>
@@ -102,7 +111,6 @@ export default function Dashboard() {
         {/* Lado Esquerdo */}
         <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Saldo da Carteira */}
                 <div className="bg-[#112240] p-6 rounded-xl border border-white/5 glow-effect">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-[#64ffda]/10 rounded-lg">
@@ -117,14 +125,15 @@ export default function Dashboard() {
                     </p>
                 </div>
 
-                {/* Saldo Blindado (AGORA DINÂMICO) */}
-                <div className="bg-[#112240] p-6 rounded-xl border border-white/5 transition-all duration-500">
+                <div className="bg-[#112240] p-6 rounded-xl border border-white/5">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-lg">
                         <ShieldCheck className="text-blue-400 w-6 h-6" />
                         </div>
-                        {shieldedVolume > 0 && (
-                            <span className="text-blue-400 text-xs font-bold px-2 py-1 bg-blue-400/10 rounded animate-pulse">UPDATING</span>
+                        {isConfirming && (
+                             <span className="text-yellow-400 text-xs font-bold px-2 py-1 bg-yellow-400/10 rounded animate-pulse flex items-center gap-1">
+                                <Loader2 size={10} className="animate-spin"/> CONFIRMING
+                             </span>
                         )}
                     </div>
                     <h3 className="text-[#8892b0] text-sm mb-1">Total Shielded Volume</h3>
@@ -134,7 +143,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Lista de Transações (AGORA DINÂMICA) */}
+            {/* Lista de Transações */}
             <div className="bg-[#112240] rounded-xl border border-white/5 overflow-hidden min-h-[300px]">
                 <div className="p-6 border-b border-white/5 flex justify-between items-center">
                     <h3 className="text-xl font-bold text-[#e6f1ff]">Recent Activity</h3>
@@ -153,7 +162,7 @@ export default function Dashboard() {
                                             <ArrowDownLeft size={20} />
                                         </div>
                                         <div>
-                                            <p className="text-[#e6f1ff] font-medium">Shield Deposit</p>
+                                            <p className="text-[#e6f1ff] font-medium">Smart Contract Deposit</p>
                                             <p className="text-xs text-[#8892b0] flex items-center gap-1">
                                                 <Clock size={10} /> {tx.timestamp}
                                             </p>
@@ -161,8 +170,8 @@ export default function Dashboard() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[#64ffda] font-bold">+{tx.amount} ETH</p>
-                                        <a href={`https://etherscan.io/tx/${tx.hash}`} target="_blank" className="text-xs text-[#8892b0] hover:text-[#e6f1ff] flex items-center justify-end gap-1">
-                                            {tx.hash.slice(0,6)}... <ExternalLink size={10} />
+                                        <a href={`https://sepolia.etherscan.io/tx/${tx.hash}`} target="_blank" className="text-xs text-[#8892b0] hover:text-[#e6f1ff] flex items-center justify-end gap-1">
+                                            Explorer <ExternalLink size={10} />
                                         </a>
                                     </div>
                                 </div>
@@ -171,7 +180,7 @@ export default function Dashboard() {
                     ) : (
                         <div className="p-12 text-center text-[#8892b0] flex flex-col items-center justify-center h-full">
                             <ShieldCheck className="w-12 h-12 mb-4 opacity-20" />
-                            <p>No transactions in this session.</p>
+                            <p>No activity recorded yet.</p>
                         </div>
                     )}
                 </div>
@@ -190,14 +199,14 @@ export default function Dashboard() {
 
                 <div className="space-y-4">
                     <div>
-                        <label className="text-xs text-[#8892b0] uppercase font-bold ml-1">Amount</label>
+                        <label className="text-xs text-[#8892b0] uppercase font-bold ml-1">Amount to Lock</label>
                         <div className="relative mt-2">
                             <input 
                                 type="number" 
                                 placeholder="0.00"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                disabled={!isConnected || isPending}
+                                disabled={!isConnected || isWalletLoading || isConfirming}
                                 className="w-full bg-[#0a192f] border border-white/10 rounded-lg p-4 text-[#e6f1ff] focus:border-[#64ffda] focus:outline-none transition-colors"
                             />
                             <span className="absolute right-4 top-4 text-[#8892b0] font-bold">ETH</span>
@@ -206,16 +215,27 @@ export default function Dashboard() {
 
                     <button 
                         onClick={handleShield}
-                        disabled={!isConnected || !amount || isPending}
+                        disabled={!isConnected || !amount || isWalletLoading || isConfirming}
                         className={`w-full py-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${
                             !isConnected || !amount
                                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                 : 'bg-[#64ffda] text-[#0a192f] hover:bg-opacity-90 hover:scale-[1.02]'
                         }`}
                     >
-                        {isPending ? 'Processing...' : 'Shield Now'} 
-                        {!isPending && <ArrowRight size={18} />}
+                        {isWalletLoading ? (
+                            <>Confirm in Wallet <Loader2 className="animate-spin" size={18}/></>
+                        ) : isConfirming ? (
+                            <>Processing on Chain <Loader2 className="animate-spin" size={18}/></>
+                        ) : (
+                            <>Deposit to Vault <ArrowRight size={18} /></>
+                        )}
                     </button>
+                    
+                    {isConfirming && (
+                         <p className="text-xs text-center text-[#64ffda] animate-pulse mt-2">
+                             Validating transaction on Sepolia Network...
+                         </p>
+                    )}
                 </div>
             </div>
         </div>
