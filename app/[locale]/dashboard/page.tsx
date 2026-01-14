@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther } from 'viem';
-import { Wallet, ArrowDownLeft, ShieldCheck, Lock, ArrowRight, ExternalLink, Clock, Loader2 } from 'lucide-react';
+import { useAccount, useBalance, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { parseEther, formatEther } from 'viem';
+import { Wallet, ArrowDownLeft, ShieldCheck, Lock, ArrowRight, ExternalLink, Clock, Loader2, Database } from 'lucide-react';
 import { toast } from 'sonner';
-import { VAULT_ADDRESS, VAULT_ABI } from '@/config/contracts'; // <--- Importando o arquivo que você criou
+import { VAULT_ADDRESS, VAULT_ABI } from '@/config/contracts';
 
 type Transaction = {
   hash: string;
@@ -15,27 +15,34 @@ type Transaction = {
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
-  const { data: balanceData } = useBalance({ address });
   
-  // Estados da tela
+  // 1. Saldo da Carteira do Usuário (Wallet)
+  const { data: walletBalance } = useBalance({ address });
+  
+  // 2. LEITURA REAL DA BLOCKCHAIN: Saldo do Cofre Zentiq
+  // O hook `useReadContract` vigia o contrato automaticamente
+  const { data: vaultBalanceData, refetch: refetchVault } = useReadContract({
+    address: VAULT_ADDRESS,
+    abi: VAULT_ABI,
+    functionName: 'getVaultBalance',
+  });
+
   const [amount, setAmount] = useState('');
-  const [shieldedVolume, setShieldedVolume] = useState(0); 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
-  // 1. Hook para ESCREVER no contrato (Chamar a função deposit)
   const { writeContract, data: hash, error: writeError, isPending: isWalletLoading } = useWriteContract();
 
-  // 2. Hook para ESPERAR a confirmação da Blockchain (O "Loading" real)
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash,
   });
 
-  // EFEITO: Monitora quando a transação é CONFIRMADA na blockchain
+  // Quando a transação confirma, atualizamos os dados
   useEffect(() => {
     if (isConfirmed && hash) {
-      // Atualiza valores visuais
-      const valorNumerico = parseFloat(amount);
-      setShieldedVolume((prev) => prev + valorNumerico);
+      // Força o site a reler o saldo do cofre na blockchain
+      refetchVault(); 
+      // Atualiza saldo da carteira também
+      // (O wagmi faz isso sozinho geralmente, mas é bom garantir)
 
       const novaTransacao: Transaction = {
         hash: hash,
@@ -44,7 +51,6 @@ export default function Dashboard() {
       };
       setTransactions((prev) => [novaTransacao, ...prev]);
 
-      // Sucesso!
       toast.success('Secure Deposit Complete!', {
         description: `Funds successfully locked in Zentiq Vault.`,
         action: {
@@ -53,11 +59,11 @@ export default function Dashboard() {
         },
       });
       
-      setAmount(''); // Limpa o campo
+      setAmount('');
     }
-  }, [isConfirmed, hash]);
+  }, [isConfirmed, hash, refetchVault, amount]); // Adicionado dependências
 
-  // EFEITO: Monitora erros
+  // Tratamento de erros
   useEffect(() => {
     if (writeError) {
       toast.error('Transaction Failed', {
@@ -75,12 +81,11 @@ export default function Dashboard() {
     }
     
     try {
-      // AQUI ESTÁ A MÁGICA: Chamamos a função 'deposit' do contrato
       writeContract({
         address: VAULT_ADDRESS,
         abi: VAULT_ABI,
         functionName: 'deposit',
-        value: parseEther(amount), // Envia o valor em ETH junto com a chamada
+        value: parseEther(amount),
       });
     } catch (error) {
       console.error(error);
@@ -101,7 +106,7 @@ export default function Dashboard() {
         {isConnected && (
             <div className="px-4 py-2 bg-[#64ffda]/10 border border-[#64ffda]/20 rounded-lg flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#64ffda] rounded-full animate-pulse"></div>
-                <span className="text-[#64ffda] text-sm font-mono">SEPOLIA NETWORK CONNECTED</span>
+                <span className="text-[#64ffda] text-sm font-mono">SEPOLIA LIVE DATA</span>
             </div>
         )}
       </header>
@@ -111,44 +116,55 @@ export default function Dashboard() {
         {/* Lado Esquerdo */}
         <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Wallet Balance */}
                 <div className="bg-[#112240] p-6 rounded-xl border border-white/5 glow-effect">
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-[#64ffda]/10 rounded-lg">
                         <Wallet className="text-[#64ffda] w-6 h-6" />
                         </div>
                     </div>
-                    <h3 className="text-[#8892b0] text-sm mb-1">Available Balance</h3>
+                    <h3 className="text-[#8892b0] text-sm mb-1">Your Wallet</h3>
                     <p className="text-3xl font-bold text-[#e6f1ff]">
-                        {isConnected && balanceData 
-                            ? `${parseFloat(balanceData.formatted).toFixed(4)} ${balanceData.symbol}`
+                        {isConnected && walletBalance 
+                            ? `${parseFloat(walletBalance.formatted).toFixed(4)} ETH`
                             : "---"}
                     </p>
                 </div>
 
-                <div className="bg-[#112240] p-6 rounded-xl border border-white/5">
+                {/* Vault Balance (REAL DA BLOCKCHAIN) */}
+                <div className="bg-[#112240] p-6 rounded-xl border border-white/5 relative overflow-hidden">
+                    {/* Efeito de fundo */}
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Database size={60} />
+                    </div>
+                    
                     <div className="flex justify-between items-start mb-4">
                         <div className="p-3 bg-blue-500/10 rounded-lg">
-                        <ShieldCheck className="text-blue-400 w-6 h-6" />
+                            <ShieldCheck className="text-blue-400 w-6 h-6" />
                         </div>
+                        {/* Indicador de Atualização */}
                         {isConfirming && (
                              <span className="text-yellow-400 text-xs font-bold px-2 py-1 bg-yellow-400/10 rounded animate-pulse flex items-center gap-1">
-                                <Loader2 size={10} className="animate-spin"/> CONFIRMING
+                                <Loader2 size={10} className="animate-spin"/> SYNCING
                              </span>
                         )}
                     </div>
-                    <h3 className="text-[#8892b0] text-sm mb-1">Total Shielded Volume</h3>
+                    <h3 className="text-[#8892b0] text-sm mb-1">Total Vault Value (TVL)</h3>
                     <p className="text-3xl font-bold text-[#e6f1ff]">
-                        {shieldedVolume.toFixed(4)} ETH
+                        {/* Aqui formatamos o BigInt que vem do contrato para número legível */}
+                        {vaultBalanceData 
+                            ? `${parseFloat(formatEther(vaultBalanceData as bigint)).toFixed(4)} ETH`
+                            : "0.0000 ETH"}
                     </p>
                 </div>
             </div>
 
-            {/* Lista de Transações */}
+            {/* Lista de Transações (Local Session) */}
             <div className="bg-[#112240] rounded-xl border border-white/5 overflow-hidden min-h-[300px]">
                 <div className="p-6 border-b border-white/5 flex justify-between items-center">
-                    <h3 className="text-xl font-bold text-[#e6f1ff]">Recent Activity</h3>
+                    <h3 className="text-xl font-bold text-[#e6f1ff]">Session Activity</h3>
                     <span className="text-xs text-[#8892b0] bg-white/5 px-2 py-1 rounded">
-                        {transactions.length} Transactions
+                        {transactions.length} Txs
                     </span>
                 </div>
                 
@@ -162,7 +178,7 @@ export default function Dashboard() {
                                             <ArrowDownLeft size={20} />
                                         </div>
                                         <div>
-                                            <p className="text-[#e6f1ff] font-medium">Smart Contract Deposit</p>
+                                            <p className="text-[#e6f1ff] font-medium">Vault Deposit</p>
                                             <p className="text-xs text-[#8892b0] flex items-center gap-1">
                                                 <Clock size={10} /> {tx.timestamp}
                                             </p>
@@ -180,7 +196,7 @@ export default function Dashboard() {
                     ) : (
                         <div className="p-12 text-center text-[#8892b0] flex flex-col items-center justify-center h-full">
                             <ShieldCheck className="w-12 h-12 mb-4 opacity-20" />
-                            <p>No activity recorded yet.</p>
+                            <p>No activity in this session.</p>
                         </div>
                     )}
                 </div>
@@ -225,7 +241,7 @@ export default function Dashboard() {
                         {isWalletLoading ? (
                             <>Confirm in Wallet <Loader2 className="animate-spin" size={18}/></>
                         ) : isConfirming ? (
-                            <>Processing on Chain <Loader2 className="animate-spin" size={18}/></>
+                            <>Syncing Chain... <Loader2 className="animate-spin" size={18}/></>
                         ) : (
                             <>Deposit to Vault <ArrowRight size={18} /></>
                         )}
@@ -233,7 +249,7 @@ export default function Dashboard() {
                     
                     {isConfirming && (
                          <p className="text-xs text-center text-[#64ffda] animate-pulse mt-2">
-                             Validating transaction on Sepolia Network...
+                             Block confirmations in progress...
                          </p>
                     )}
                 </div>
