@@ -1,20 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* --- ADICIONE NO FINAL DO ARQUIVO --- */
 
-:root {
-  --background: #0a192f;
-  --foreground: #8892b0;
+/* Efeito de Vidro Fosco (Glassmorphism) */
+.glass-panel {
+  background: rgba(17, 34, 64, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
-body {
-  color: var(--foreground);
-  background: #0a192f;
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
+.glass-panel:hover {
+  background: rgba(17, 34, 64, 0.8);
+  border-color: rgba(100, 255, 218, 0.3);
+  box-shadow: 0 0 20px rgba(100, 255, 218, 0.1);
 }
 
-/* Efeito de brilho para botões */
-.glow-effect {
-  box-shadow: 0 0 10px rgba(100, 255, 218, 0.1);
+/* Texto Brilhante */
+.text-glow {
+  text-shadow: 0 0 20px rgba(100, 255, 218, 0.5);
+}
+
+/* Animação de Flutuar (Para o Logo de Fundo) */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+/* Grid de Fundo Futurista */
+.bg-grid {
+  background-size: 50px 50px;
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
