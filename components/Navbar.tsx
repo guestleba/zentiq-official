@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react"; // Removi o Shield pois vamos usar sua imagem
 import { useState } from "react";
